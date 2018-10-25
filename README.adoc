@@ -18,3 +18,28 @@ provide native PlantUML packages.
 * CentOS 6
 * CentOS 7
 * Fedora
+
+
+== Usage
+
+=== Install on Ubuntu
+
+[source,sh]
+----
+# Prerequisites: "curl"
+# apt-get update && apt-get install -y curl
+sudo bash -c "curl -L https://raw.githubusercontent.com/riboseinc/plantuml-install/master/ubuntu.sh | bash"
+----
+
+NOTE: The command has to be run as `root`.
+
+
+=== Install on CentOS
+
+[source,sh]
+----
+# Prerequisites: "curl"
+# yum install -y curl
+sudo bash -c "curl -L https://raw.githubusercontent.com/riboseinc/plantuml-install/master/centos.sh | bash"
+----
+
