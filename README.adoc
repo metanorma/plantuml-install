@@ -1,0 +1,20 @@
+= PlantUML installation script
+
+PlantUML is an excellent UML diagram generator.
+
+Unfortunately, it is not provided as a package in older platforms,
+such as Ubuntu's 12.04 and 14.04.
+
+This is a script to install it for those platforms that do not
+provide native PlantUML packages.
+
+== Platforms supported
+
+* Ubuntu 12.04 (Precise)
+* Ubuntu 14.04 (Trusty)
+* Ubuntu 16.04 (Xenial)
+* Ubuntu 18.04 (Bionic)
+
+* CentOS 6
+* CentOS 7
+* Fedora
