@@ -1,4 +1,6 @@
 # Install PlantUML
+set -e
+
 PLANTUML_URL="${PLANTUML_URL:-http://sourceforge.net/projects/plantuml/files/plantuml.jar/download}"
 
 if [ -f "/opt/plantuml/plantuml.jar" ]; then
