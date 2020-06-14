@@ -11,6 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
+      - name: Shellcheck lint
+        run: |
+          sudo apt-get install -y shellcheck
+          shellcheck ubuntu.sh
       - name: Install
         run: |
           cat ubuntu.sh | sudo bash
@@ -21,12 +25,17 @@ jobs:
     name: Test on CentOS (Docker)
     runs-on: ubuntu-latest
     container:
-      image: centos7
+      image: centos:centos7
     steps:
       - uses: actions/checkout@master
+      - name: Shellcheck lint
+        run: |
+          yum -y install epel-release
+          yum -y install ShellCheck
+          shellcheck centos.sh
       - name: Install
         run: |
-          cat centos.sh | sudo bash
+          cat centos.sh | bash
       - name: Help
         run: |
           plantuml -h
