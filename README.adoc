@@ -14,11 +14,13 @@ provide native PlantUML packages.
 * Ubuntu 14.04 (Trusty)
 * Ubuntu 16.04 (Xenial)
 * Ubuntu 18.04 (Bionic)
+* Ubuntu 20.04 (Focal)
 
 * CentOS 6
 * CentOS 7
 * Fedora
 
+* Alpine Linux 3
 
 == Usage
 
@@ -43,3 +45,12 @@ NOTE: The command has to be run as `root`.
 sudo bash -c "curl -L https://raw.githubusercontent.com/riboseinc/plantuml-install/master/centos.sh | bash"
 ----
 
+
+=== Install on Alpine
+
+[source,sh]
+----
+# Prerequisites: "curl"
+# apk add curl
+sh -c "curl -L https://raw.githubusercontent.com/riboseinc/plantuml-install/master/alpine.sh | sh"
+----

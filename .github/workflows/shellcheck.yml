@@ -1,0 +1,26 @@
+name: lint
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+
+jobs:
+  lint:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        script:
+          - ubuntu.sh
+          - centos.sh
+          - alpine.sh
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install shellcheck
+        run: |
+          sudo apt-get install -y shellcheck
+
+      - name: Run shellcheck
+        run: |
+          shellcheck ${{ matrix.script }}
