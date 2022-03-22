@@ -2,40 +2,62 @@ name: test
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, main ]
   pull_request:
 
 jobs:
-  test-ubuntu:
-    name: Test on Ubuntu
+  test:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@master
-      - name: Shellcheck lint
-        run: |
-          sudo apt-get install -y shellcheck
-          shellcheck ubuntu.sh
-      - name: Install
-        run: |
-          cat ubuntu.sh | sudo bash
-      - name: Help
-        run: |
-          plantuml -h
-  test-centos:
-    name: Test on CentOS (Docker)
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        container:
+          - ubuntu:20.04
+          - ubuntu:18.04
+          - ubuntu:16.04
+          - debian:buster
+          - debian:stretch
+          - debian:bullseye
+          # - centos:centos8
+          - centos:centos7
+          # - fedora:32
+          # - fedora:31
+          # - fedora:30
+          - alpine:3
+
     container:
-      image: centos:centos7
+      image: ${{ matrix.container }}
+
     steps:
-      - uses: actions/checkout@master
-      - name: Shellcheck lint
+      - uses: actions/checkout@v2
+
+      - name: Prep on Debian/Ubuntu
+        if: ${{ startsWith(matrix.container, 'ubuntu') || startsWith(matrix.container, 'debian') }}
         run: |
-          yum -y install epel-release
-          yum -y install ShellCheck
-          shellcheck centos.sh
-      - name: Install
+          apt-get update
+          apt-get install -y curl
+
+      - name: Install on Debian/Ubuntu
+        if: ${{ startsWith(matrix.container, 'ubuntu') || startsWith(matrix.container, 'debian') }}
+        # The following environment variables are to prevent installation of
+        # tzdata showing interactive prompt starting with ubuntu:20.04.
+        env:
+          DEBIAN_FRONTEND: noninteractive
+          DEBCONF_NONINTERACTIVE_SEEN: true
+          TZ: Etc/GMT
+        run: |
+          cat ubuntu.sh | bash
+
+      - name: Install on CentOS
+        if: ${{startsWith(matrix.container, 'centos') || startsWith(matrix.container, 'fedora') }}
         run: |
           cat centos.sh | bash
-      - name: Help
+
+      - name: Install on Alpine
+        if: ${{startsWith(matrix.container, 'alpine') }}
+        run: |
+          cat alpine.sh | sh
+
+      - name: Try help
         run: |
           plantuml -h
