@@ -10,7 +10,8 @@ if [ -f "/usr/share/java/plantuml.jar" -a -f "/usr/bin/plantuml" ]; then
 fi
 
 echo '[plantuml] Installing PlantUML...'
-apk add curl graphviz ttf-droid ttf-droid-nonlatin fontconfig
+apk add curl graphviz fontconfig
+apk add ttf-droid ttf-droid-nonlatin --repository=http://dl-cdn.alpinelinux.org/alpine/v3.16/community
 
 mkdir -p /opt/plantuml
 curl -o /opt/plantuml/plantuml.jar -L "${PLANTUML_URL}"
