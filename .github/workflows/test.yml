@@ -2,8 +2,9 @@ name: test
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ main ]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   test:
@@ -29,7 +30,7 @@ jobs:
       image: ${{ matrix.container }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Prep on Debian/Ubuntu
         if: ${{ startsWith(matrix.container, 'ubuntu') || startsWith(matrix.container, 'debian') }}
