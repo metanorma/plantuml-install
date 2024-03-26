@@ -2,8 +2,9 @@ name: test
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ main ]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   test:
@@ -23,13 +24,27 @@ jobs:
           # - fedora:32
           # - fedora:31
           # - fedora:30
-          - alpine:3
+          - alpine:3.19
+          - alpine:3.16
 
     container:
       image: ${{ matrix.container }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+
+      # https://unix.stackexchange.com/a/744408/48776
+      - name: Prep on Debian stretch
+        if: ${{ startsWith(matrix.container, 'debian') && endsWith(matrix.container, 'stretch') }}
+        run: |
+          cp /etc/apt/sources.list /etc/apt/sources.list.backup
+          cat << 'SRC' > /etc/apt/sources.list
+          deb http://archive.debian.org/debian-security stretch/updates main
+          deb-src http://archive.debian.org/debian-security stretch/updates main
+
+          deb http://archive.debian.org/debian stretch main
+          deb-src http://archive.debian.org/debian stretch main
+          SRC
 
       - name: Prep on Debian/Ubuntu
         if: ${{ startsWith(matrix.container, 'ubuntu') || startsWith(matrix.container, 'debian') }}
