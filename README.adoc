@@ -30,7 +30,7 @@ provide native PlantUML packages.
 ----
 # Prerequisites: "curl"
 # apt-get update && apt-get install -y curl
-sudo bash -c "curl -L https://raw.githubusercontent.com/riboseinc/plantuml-install/master/ubuntu.sh | bash"
+sudo bash -c "curl -L https://raw.githubusercontent.com/riboseinc/plantuml-install/main/ubuntu.sh | bash"
 ----
 
 NOTE: The command has to be run as `root`.
@@ -42,7 +42,7 @@ NOTE: The command has to be run as `root`.
 ----
 # Prerequisites: "curl"
 # yum install -y curl
-sudo bash -c "curl -L https://raw.githubusercontent.com/riboseinc/plantuml-install/master/centos.sh | bash"
+sudo bash -c "curl -L https://raw.githubusercontent.com/riboseinc/plantuml-install/main/centos.sh | bash"
 ----
 
 
@@ -52,5 +52,5 @@ sudo bash -c "curl -L https://raw.githubusercontent.com/riboseinc/plantuml-insta
 ----
 # Prerequisites: "curl"
 # apk add curl
-sh -c "curl -L https://raw.githubusercontent.com/riboseinc/plantuml-install/master/alpine.sh | sh"
+sh -c "curl -L https://raw.githubusercontent.com/riboseinc/plantuml-install/main/alpine.sh | sh"
 ----
