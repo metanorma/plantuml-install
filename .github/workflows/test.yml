@@ -33,6 +33,19 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      # https://unix.stackexchange.com/a/744408/48776
+      - name: Prep on Debian stretch
+        if: ${{ startsWith(matrix.container, 'debian') && endsWith(matrix.container, 'stretch') }}
+        run: |
+          cp /etc/apt/sources.list /etc/apt/sources.list.backup
+          cat << 'SRC' > /etc/apt/sources.list
+          deb http://archive.debian.org/debian-security stretch/updates main
+          deb-src http://archive.debian.org/debian-security stretch/updates main
+
+          deb http://archive.debian.org/debian stretch main
+          deb-src http://archive.debian.org/debian stretch main
+          SRC
+
       - name: Prep on Debian/Ubuntu
         if: ${{ startsWith(matrix.container, 'ubuntu') || startsWith(matrix.container, 'debian') }}
         run: |
