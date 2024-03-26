@@ -12,7 +12,8 @@ fi
 echo '[plantuml] Installing PlantUML...'
 apk add curl openjdk8-jre graphviz fontconfig
 
-source /etc/os-release
+# shellcheck disable=SC1091
+. /etc/os-release
 ALPINE_MAJOR=$(echo "$VERSION_ID" | cut -d. -f1)
 ALPINE_MINOR=$(echo "$VERSION_ID)" | cut -d. -f2)
 
