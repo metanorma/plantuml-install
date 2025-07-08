@@ -1,30 +1,18 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # Install PlantUML
 set -e
 
 PLANTUML_URL="https://github.com/plantuml/plantuml/releases/latest/download/plantuml.jar"
-PLANTUML_DIR="/opt/plantuml/"
-PLANTUML_BIN="/usr/local/bin/plantuml"
+PLANTUML_DIR="/opt/plantuml"
+PLANTUML_BIN="/usr/bin/plantuml"
 
-if [ -f "${PLANTUML_DIR}plantuml.jar" ] && [ -f "${PLANTUML_BIN}" ]; then
+if [[ -f "${PLANTUML_DIR}/plantuml.jar" && -f "${PLANTUML_BIN}" ]]; then
   echo '[plantuml] PlantUML already installed.'
   exit
 fi
 
 echo '[plantuml] Installing PlantUML...'
-apk add curl openjdk8-jre graphviz fontconfig
-
-# shellcheck disable=SC1091
-. /etc/os-release
-ALPINE_MAJOR=$(echo "$VERSION_ID" | cut -d. -f1)
-ALPINE_MINOR=$(echo "$VERSION_ID" | cut -d. -f2)
-
-echo '[plantuml] Installing font packages...'
-if [ "${ALPINE_MAJOR}" -ge 3 ] && [ "${ALPINE_MINOR}" -ge 17 ]; then
-  apk add font-droid font-droid-nonlatin
-else
-  apk add ttf-droid ttf-droid-nonlatin
-fi
+dnf install -y java-1.8.0-openjdk graphviz
 
 # Create directory for PlantUML
 mkdir -p "$PLANTUML_DIR"
