@@ -13,7 +13,10 @@ jobs:
       matrix:
         script:
           - ubuntu.sh
+          - debian.sh
           - centos.sh
+          - rhel.sh
+          - fedora.sh
           - alpine.sh
     steps:
       - uses: actions/checkout@v4

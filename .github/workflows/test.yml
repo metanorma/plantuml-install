@@ -5,6 +5,9 @@ on:
     branches: [ main ]
   pull_request:
   workflow_dispatch:
+  schedule:
+    # Run tests weekly on Sundays at 2 AM UTC
+    - cron: '0 2 * * 0'
 
 jobs:
   test:
@@ -12,67 +15,126 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        container:
-          - ubuntu:20.04
-          - ubuntu:18.04
-          - ubuntu:16.04
-          - debian:buster
-          - debian:stretch
-          - debian:bullseye
-          # - centos:centos8
-          - centos:centos7
-          # - fedora:32
-          # - fedora:31
-          # - fedora:30
-          - alpine:3.19
-          - alpine:3.16
+        include:
+          # Ubuntu containers
+          - { image: "ubuntu:16.04", os: "ubuntu", checkout: "manual", script: "ubuntu.sh" }
+          - { image: "ubuntu:18.04", os: "ubuntu", checkout: "manual", script: "ubuntu.sh" }
+          - { image: "ubuntu:20.04", os: "ubuntu", checkout: "v4", script: "ubuntu.sh" }
+          - { image: "ubuntu:22.04", os: "ubuntu", checkout: "v4", script: "ubuntu.sh" }
+          - { image: "ubuntu:24.04", os: "ubuntu", checkout: "v4", script: "ubuntu.sh" }
+
+          # Debian containers
+          - { image: "debian:stretch", os: "debian", checkout: "manual", script: "debian.sh", eol_repos: true }
+          - { image: "debian:buster", os: "debian", checkout: "v4", script: "debian.sh" }
+          - { image: "debian:bullseye", os: "debian", checkout: "v4", script: "debian.sh" }
+          - { image: "debian:bookworm", os: "debian", checkout: "v4", script: "debian.sh" }
+
+          # CentOS containers
+          - { image: "centos:centos7", os: "centos", checkout: "manual", script: "centos.sh", eol_repos: true }
+          - { image: "centos:centos8", os: "centos", checkout: "v3", script: "centos.sh", eol_repos: true }
+          - { image: "quay.io/centos/centos:stream9", os: "centos", checkout: "v3", script: "centos.sh" }
+
+          # Rocky Linux containers
+          - { image: "rockylinux:8", os: "rocky", checkout: "v4", script: "rhel.sh" }
+          - { image: "rockylinux:9", os: "rocky", checkout: "v4", script: "rhel.sh" }
+
+          # AlmaLinux containers
+          - { image: "almalinux:8", os: "alma", checkout: "v4", script: "rhel.sh" }
+          - { image: "almalinux:9", os: "alma", checkout: "v4", script: "rhel.sh" }
+
+          # Fedora containers
+          - { image: "fedora:39", os: "fedora", checkout: "v4", script: "fedora.sh" }
+          - { image: "fedora:40", os: "fedora", checkout: "v4", script: "fedora.sh" }
+
+          # Alpine containers
+          - { image: "alpine:3.18", os: "alpine", checkout: "v4", script: "alpine.sh" }
+          - { image: "alpine:3.19", os: "alpine", checkout: "v4", script: "alpine.sh" }
+          - { image: "alpine:3.20", os: "alpine", checkout: "v4", script: "alpine.sh" }
 
     container:
-      image: ${{ matrix.container }}
+      image: ${{ matrix.image }}
 
     steps:
-      - uses: actions/checkout@v3
-
-      # https://unix.stackexchange.com/a/744408/48776
-      - name: Prep on Debian stretch
-        if: ${{ startsWith(matrix.container, 'debian') && endsWith(matrix.container, 'stretch') }}
+      - name: Manual checkout for GLIBC-incompatible containers
+        if: ${{ matrix.checkout == 'manual' }}
         run: |
-          cp /etc/apt/sources.list /etc/apt/sources.list.backup
-          cat << 'SRC' > /etc/apt/sources.list
+          # Install git and curl first, handle EOL repositories if needed
+          if [ "${{ matrix.os }}" = "centos" ] && [ "${{ matrix.eol_repos }}" = "true" ]; then
+            # Fix CentOS EOL repositories first
+            sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+            sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+            yum install -y git curl
+          elif [ "${{ matrix.os }}" = "debian" ] && [ "${{ matrix.eol_repos }}" = "true" ]; then
+            # Fix Debian stretch repositories first
+            cp /etc/apt/sources.list /etc/apt/sources.list.backup
+            cat << 'SRC' > /etc/apt/sources.list
           deb http://archive.debian.org/debian-security stretch/updates main
           deb-src http://archive.debian.org/debian-security stretch/updates main
 
           deb http://archive.debian.org/debian stretch main
           deb-src http://archive.debian.org/debian stretch main
           SRC
+            apt-get update
+            apt-get install -y git curl
+          elif [ "${{ matrix.os }}" = "ubuntu" ]; then
+            # Ubuntu 16.04 and 18.04 have outdated GLIBC incompatible with modern GitHub Actions
+            apt-get update
+            apt-get install -y git curl
+          fi
 
-      - name: Prep on Debian/Ubuntu
-        if: ${{ startsWith(matrix.container, 'ubuntu') || startsWith(matrix.container, 'debian') }}
+          # Manual git clone using GitHub context
+          git clone https://github.com/${{ github.repository }}.git .
+          git config --global --add safe.directory /__w/plantuml-install/plantuml-install
+          git fetch origin ${{ github.ref }}
+          git checkout ${{ github.sha }}
+
+      - name: Checkout code (v4)
+        if: ${{ matrix.checkout == 'v4' }}
+        uses: actions/checkout@v4
+
+      - name: Checkout code (v3)
+        if: ${{ matrix.checkout == 'v3' }}
+        uses: actions/checkout@v3
+
+      - name: Fix EOL repositories
+        if: ${{ matrix.eol_repos == true && matrix.checkout != 'manual' }}
         run: |
-          apt-get update
-          apt-get install -y curl
+          # Fix EOL repositories for containers that use standard checkout
+          sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+          sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
 
-      - name: Install on Debian/Ubuntu
-        if: ${{ startsWith(matrix.container, 'ubuntu') || startsWith(matrix.container, 'debian') }}
-        # The following environment variables are to prevent installation of
-        # tzdata showing interactive prompt starting with ubuntu:20.04.
+      - name: Install dependencies
+        if: ${{ matrix.checkout != 'manual' }}
+        run: |
+          if [ "${{ matrix.os }}" = "ubuntu" ] || [ "${{ matrix.os }}" = "debian" ]; then
+            apt-get update
+            apt-get install -y curl
+          elif [ "${{ matrix.os }}" = "centos" ]; then
+            if command -v dnf >/dev/null 2>&1; then
+              dnf install -y curl --allowerasing
+            else
+              yum install -y curl
+            fi
+          elif [ "${{ matrix.os }}" = "rocky" ] || [ "${{ matrix.os }}" = "alma" ]; then
+            dnf install -y curl --allowerasing
+          elif [ "${{ matrix.os }}" = "fedora" ]; then
+            dnf install -y curl
+          elif [ "${{ matrix.os }}" = "alpine" ]; then
+            apk add curl
+          fi
+
+      - name: Install PlantUML
         env:
           DEBIAN_FRONTEND: noninteractive
           DEBCONF_NONINTERACTIVE_SEEN: true
           TZ: Etc/GMT
         run: |
-          cat ubuntu.sh | bash
+          if [ "${{ matrix.os }}" = "alpine" ]; then
+            cat ${{ matrix.script }} | sh
+          else
+            cat ${{ matrix.script }} | bash
+          fi
 
-      - name: Install on CentOS
-        if: ${{startsWith(matrix.container, 'centos') || startsWith(matrix.container, 'fedora') }}
+      - name: Test PlantUML installation
         run: |
-          cat centos.sh | bash
-
-      - name: Install on Alpine
-        if: ${{startsWith(matrix.container, 'alpine') }}
-        run: |
-          cat alpine.sh | sh
-
-      - name: Try help
-        run: |
-          plantuml -h
+          plantuml -version

@@ -10,17 +10,15 @@ provide native PlantUML packages.
 
 == Platforms supported
 
-* Ubuntu 12.04 (Precise)
-* Ubuntu 14.04 (Trusty)
-* Ubuntu 16.04 (Xenial)
-* Ubuntu 18.04 (Bionic)
-* Ubuntu 20.04 (Focal)
+* Ubuntu 16.04, 18.04, 20.04, 22.04, 24.04
+* Debian stretch (9), buster (10), bullseye (11), bookworm (12)
+* CentOS 7, 8, Stream 9
+* Rocky Linux 8, 9
+* AlmaLinux 8, 9
+* Fedora 39, 40
+* Alpine Linux 3.18, 3.19, 3.20
 
-* CentOS 6
-* CentOS 7
-* Fedora
-
-* Alpine Linux 3
+All platforms are automatically tested via GitHub Actions using Docker containers with comprehensive compatibility handling for legacy systems.
 
 == Usage
 
@@ -30,20 +28,58 @@ provide native PlantUML packages.
 ----
 # Prerequisites: "curl"
 # apt-get update && apt-get install -y curl
-sudo bash -c "curl -L https://raw.githubusercontent.com/riboseinc/plantuml-install/main/ubuntu.sh | bash"
+sudo bash -c "curl -L https://raw.githubusercontent.com/metanorma/plantuml-install/main/ubuntu.sh | bash"
 ----
 
 NOTE: The command has to be run as `root`.
 
 
-=== Install on CentOS
+=== Install on Debian
 
 [source,sh]
 ----
 # Prerequisites: "curl"
-# yum install -y curl
-sudo bash -c "curl -L https://raw.githubusercontent.com/riboseinc/plantuml-install/main/centos.sh | bash"
+# apt-get update && apt-get install -y curl
+sudo bash -c "curl -L https://raw.githubusercontent.com/metanorma/plantuml-install/main/debian.sh | bash"
 ----
+
+NOTE: The command has to be run as `root`.
+
+
+=== Install on CentOS 7, 8, Stream 9
+
+[source,sh]
+----
+# Prerequisites: "curl"
+# yum install -y curl (CentOS 7/8) or dnf install -y curl (Stream 9)
+sudo bash -c "curl -L https://raw.githubusercontent.com/metanorma/plantuml-install/main/centos.sh | bash"
+----
+
+NOTE: The command has to be run as `root`.
+
+
+=== Install on CentOS successors: Rocky Linux, AlmaLinux
+
+[source,sh]
+----
+# Prerequisites: "curl"
+# dnf install -y curl
+sudo bash -c "curl -L https://raw.githubusercontent.com/metanorma/plantuml-install/main/rhel.sh | bash"
+----
+
+NOTE: The command has to be run as `root`.
+
+
+=== Install on Fedora
+
+[source,sh]
+----
+# Prerequisites: "curl"
+# dnf install -y curl
+sudo bash -c "curl -L https://raw.githubusercontent.com/metanorma/plantuml-install/main/fedora.sh | bash"
+----
+
+NOTE: The command has to be run as `root`.
 
 
 === Install on Alpine
@@ -52,5 +88,25 @@ sudo bash -c "curl -L https://raw.githubusercontent.com/riboseinc/plantuml-insta
 ----
 # Prerequisites: "curl"
 # apk add curl
-sh -c "curl -L https://raw.githubusercontent.com/riboseinc/plantuml-install/main/alpine.sh | sh"
+sh -c "curl -L https://raw.githubusercontent.com/metanorma/plantuml-install/main/alpine.sh | sh"
 ----
+
+== Testing
+
+This repository includes automated testing via GitHub Actions that validates all installation scripts across multiple Linux distributions using Docker containers.
+
+The test matrix includes:
+* Ubuntu: 16.04, 18.04, 20.04, 22.04, 24.04
+* Debian: stretch, buster, bullseye, bookworm
+* CentOS: 7, 8, Stream 9
+* Rocky Linux: 8, 9
+* AlmaLinux: 8, 9
+* Fedora: 39, 40
+* Alpine Linux: 3.18, 3.19, 3.20
+
+Tests run automatically on:
+* Every push to main/master branch
+* Every pull request
+* Weekly schedule (Sundays at 2 AM UTC)
+
+You can view the test results in the Actions tab of this repository.
