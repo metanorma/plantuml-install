@@ -25,7 +25,7 @@ jobs:
 
           # Debian containers
           - { image: "debian:stretch", os: "debian", checkout: "manual", script: "debian.sh", eol_repos: true }
-          - { image: "debian:buster", os: "debian", checkout: "v4", script: "debian.sh" }
+          - { image: "debian:buster", os: "debian", checkout: "v4", script: "debian.sh", eol_repos: true }
           - { image: "debian:bullseye", os: "debian", checkout: "v4", script: "debian.sh" }
           - { image: "debian:bookworm", os: "debian", checkout: "v4", script: "debian.sh" }
 
