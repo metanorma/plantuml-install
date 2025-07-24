@@ -28,6 +28,7 @@ jobs:
           - { image: "debian:buster", os: "debian", checkout: "v4", script: "debian.sh", eol_repos: true }
           - { image: "debian:bullseye", os: "debian", checkout: "v4", script: "debian.sh" }
           - { image: "debian:bookworm", os: "debian", checkout: "v4", script: "debian.sh" }
+          - { image: "debian:trixie", os: "debian", checkout: "v4", script: "debian.sh" }
 
           # CentOS containers
           - { image: "centos:centos7", os: "centos", checkout: "manual", script: "centos.sh", eol_repos: true }
@@ -50,6 +51,8 @@ jobs:
           - { image: "alpine:3.18", os: "alpine", checkout: "v4", script: "alpine.sh" }
           - { image: "alpine:3.19", os: "alpine", checkout: "v4", script: "alpine.sh" }
           - { image: "alpine:3.20", os: "alpine", checkout: "v4", script: "alpine.sh" }
+          - { image: "alpine:3.21", os: "alpine", checkout: "v4", script: "alpine.sh" }
+          - { image: "alpine:3.22", os: "alpine", checkout: "v4", script: "alpine.sh" }
 
     container:
       image: ${{ matrix.image }}
