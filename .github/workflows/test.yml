@@ -25,7 +25,7 @@ jobs:
 
           # Debian containers
           - { image: "debian:stretch", os: "debian", checkout: "manual", script: "debian.sh", eol_repos: true }
-          - { image: "debian:buster", os: "debian", checkout: "v4", script: "debian.sh", eol_repos: true }
+          - { image: "debian:buster", os: "debian", checkout: "manual", script: "debian.sh", eol_repos: true }
           - { image: "debian:bullseye", os: "debian", checkout: "v4", script: "debian.sh" }
           - { image: "debian:bookworm", os: "debian", checkout: "v4", script: "debian.sh" }
           - { image: "debian:trixie", os: "debian", checkout: "v4", script: "debian.sh" }
@@ -58,37 +58,68 @@ jobs:
       image: ${{ matrix.image }}
 
     steps:
+      - name: Fix EOL repositories for CentOS
+        if: ${{ matrix.checkout == 'manual' && matrix.os == 'centos' && matrix.eol_repos == true }}
+        run: |
+          sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+          sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+
+      - name: Fix EOL repositories for Debian
+        if: ${{ matrix.checkout == 'manual' && matrix.os == 'debian' && matrix.eol_repos == true }}
+        run: |
+          cp /etc/apt/sources.list /etc/apt/sources.list.backup
+          # Extract Debian codename from the image name
+          CODENAME=$(echo "${{ matrix.image }}" | cut -d':' -f2)
+          cat << SRC > /etc/apt/sources.list
+          deb http://archive.debian.org/debian-security ${CODENAME}/updates main
+          deb-src http://archive.debian.org/debian-security ${CODENAME}/updates main
+
+          deb http://archive.debian.org/debian ${CODENAME} main
+          deb-src http://archive.debian.org/debian ${CODENAME} main
+          SRC
+
+      - name: Install dependencies for Ubuntu/Debian (manual checkout)
+        if: ${{ matrix.checkout == 'manual' && (matrix.os == 'ubuntu' || matrix.os == 'debian') }}
+        run: |
+          apt-get update
+          apt-get install -y git curl
+
+      - name: Install dependencies for CentOS (manual checkout)
+        if: ${{ matrix.checkout == 'manual' && matrix.os == 'centos' }}
+        run: |
+          yum install -y git curl
+
+      - name: Install dependencies for Ubuntu/Debian (non-manual checkout)
+        if: ${{ matrix.checkout != 'manual' && (matrix.os == 'ubuntu' || matrix.os == 'debian') }}
+        run: |
+          apt-get update
+          apt-get install -y curl
+
+      - name: Install dependencies for CentOS (non-manual checkout)
+        if: ${{ matrix.checkout != 'manual' && matrix.os == 'centos' }}
+        run: |
+          if command -v dnf >/dev/null 2>&1; then
+            dnf install -y curl --allowerasing
+          else
+            yum install -y curl
+          fi
+
+      - name: Install dependencies for Fedora/Rocky/Alma Linux
+        if: ${{ matrix.os == 'fedora' || matrix.os == 'rocky' || matrix.os == 'alma' }}
+        run: |
+          dnf install -y curl --allowerasing
+
+      - name: Install dependencies for Alpine
+        if: ${{ matrix.os == 'alpine' }}
+        run: |
+          apk add curl
+
       - name: Manual checkout for GLIBC-incompatible containers
         if: ${{ matrix.checkout == 'manual' }}
         run: |
-          # Install git and curl first, handle EOL repositories if needed
-          if [ "${{ matrix.os }}" = "centos" ] && [ "${{ matrix.eol_repos }}" = "true" ]; then
-            # Fix CentOS EOL repositories first
-            sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-            sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
-            yum install -y git curl
-          elif [ "${{ matrix.os }}" = "debian" ] && [ "${{ matrix.eol_repos }}" = "true" ]; then
-            # Fix Debian stretch repositories first
-            cp /etc/apt/sources.list /etc/apt/sources.list.backup
-            cat << 'SRC' > /etc/apt/sources.list
-          deb http://archive.debian.org/debian-security stretch/updates main
-          deb-src http://archive.debian.org/debian-security stretch/updates main
-
-          deb http://archive.debian.org/debian stretch main
-          deb-src http://archive.debian.org/debian stretch main
-          SRC
-            apt-get update
-            apt-get install -y git curl
-          elif [ "${{ matrix.os }}" = "ubuntu" ]; then
-            # Ubuntu 16.04 and 18.04 have outdated GLIBC incompatible with modern GitHub Actions
-            apt-get update
-            apt-get install -y git curl
-          fi
-
-          # Manual git clone using GitHub context
           git clone https://github.com/${{ github.repository }}.git .
           git config --global --add safe.directory /__w/plantuml-install/plantuml-install
-          git fetch origin ${{ github.ref }}
+          git fetch origin ${{ github.sha }}
           git checkout ${{ github.sha }}
 
       - name: Checkout code (v4)
@@ -98,33 +129,6 @@ jobs:
       - name: Checkout code (v3)
         if: ${{ matrix.checkout == 'v3' }}
         uses: actions/checkout@v3
-
-      - name: Fix EOL repositories
-        if: ${{ matrix.eol_repos == true && matrix.checkout != 'manual' }}
-        run: |
-          # Fix EOL repositories for containers that use standard checkout
-          sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-          sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
-
-      - name: Install dependencies
-        if: ${{ matrix.checkout != 'manual' }}
-        run: |
-          if [ "${{ matrix.os }}" = "ubuntu" ] || [ "${{ matrix.os }}" = "debian" ]; then
-            apt-get update
-            apt-get install -y curl
-          elif [ "${{ matrix.os }}" = "centos" ]; then
-            if command -v dnf >/dev/null 2>&1; then
-              dnf install -y curl --allowerasing
-            else
-              yum install -y curl
-            fi
-          elif [ "${{ matrix.os }}" = "rocky" ] || [ "${{ matrix.os }}" = "alma" ]; then
-            dnf install -y curl --allowerasing
-          elif [ "${{ matrix.os }}" = "fedora" ]; then
-            dnf install -y curl
-          elif [ "${{ matrix.os }}" = "alpine" ]; then
-            apk add curl
-          fi
 
       - name: Install PlantUML
         env:
